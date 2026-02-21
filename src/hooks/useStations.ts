@@ -2,16 +2,20 @@ import { useQuery } from '@tanstack/react-query'
 import api from '../services/api'
 import type { ChargePoint } from '../types/station'
 
-export function useNearbyStations(lat?: number, lon?: number, radius = 5) {
+export function useNearbyStations(lat?: number, lon?: number, radius = 50) {
   return useQuery<ChargePoint[]>({
     queryKey: ['stations', 'nearby', lat, lon, radius],
     queryFn: async () => {
-      const { data } = await api.get('/devices/nearby', {
-        params: { lat, lon, radius },
-      })
-      return data
+      if (lat != null && lon != null) {
+        const { data } = await api.get('/devices/nearby', {
+          params: { lat, lon, radius },
+        })
+        return data ?? []
+      }
+      // Fallback: load all stations when geolocation is unavailable
+      const { data } = await api.get('/devices')
+      return data ?? []
     },
-    enabled: lat != null && lon != null,
     staleTime: 30000,
   })
 }

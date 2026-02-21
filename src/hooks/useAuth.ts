@@ -37,21 +37,14 @@ export function useAuth() {
     }
   }, [fetchUser])
 
-  const login = useCallback(async (email: string, password: string) => {
-    const { data } = await api.post('/auth/login', { email, password })
-    saveTokens(data.tokens)
-    setUser(data.user)
-    return data.user
-  }, [saveTokens])
-
-  const loginWithCpf = useCallback(async (cpf: string, password: string) => {
+  const login = useCallback(async (cpf: string, password: string) => {
     const { data } = await api.post('/auth/login', { cpf, password })
     saveTokens(data.tokens)
     setUser(data.user)
     return data.user
   }, [saveTokens])
 
-  const register = useCallback(async (name: string, email: string, password: string, cpf?: string) => {
+  const register = useCallback(async (name: string, email: string, password: string, cpf: string) => {
     const { data } = await api.post('/auth/register', { name, email, password, cpf })
     saveTokens(data.tokens)
     setUser(data.user)
@@ -68,7 +61,6 @@ export function useAuth() {
     loading,
     isAuthenticated: !!user,
     login,
-    loginWithCpf,
     register,
     logout,
     token: localStorage.getItem('ev_access_token') || '',

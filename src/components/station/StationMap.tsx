@@ -1,7 +1,7 @@
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import type { ChargePoint } from '../../types/station'
-import { formatCurrency, formatDistance } from '../../utils/formatters'
+import { stationName, stationAddress, stationMaxPower, stationIsOnline, stationLat, stationLon } from '../../types/station'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 
@@ -13,40 +13,70 @@ const defaultIcon = L.icon({
   iconSize: [25, 41],
   iconAnchor: [12, 41],
 })
-
-const availableIcon = L.divIcon({
-  className: '',
-  html: '<div style="background:#10b981;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.3)"></div>',
-  iconSize: [14, 14],
-  iconAnchor: [7, 7],
-})
-
-const occupiedIcon = L.divIcon({
-  className: '',
-  html: '<div style="background:#f59e0b;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.3)"></div>',
-  iconSize: [14, 14],
-  iconAnchor: [7, 7],
-})
-
-const offlineIcon = L.divIcon({
-  className: '',
-  html: '<div style="background:#ef4444;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.3)"></div>',
-  iconSize: [14, 14],
-  iconAnchor: [7, 7],
-})
-
 L.Marker.prototype.options.icon = defaultIcon
 
-function getStationIcon(station: ChargePoint) {
-  const hasAvailable = station.connectors.some(c => c.status === 'Available')
-  if (station.status === 'Offline') return offlineIcon
-  if (hasAvailable) return availableIcon
-  return occupiedIcon
+function createStationIcon(station: ChargePoint) {
+  const maxPower = stationMaxPower(station)
+  const online = stationIsOnline(station)
+  const hasAvailable = station.connectors?.some(c => c.status === 'Available')
+
+  let bgColor = '#ef4444' // red - offline
+  if (online && hasAvailable) {
+    bgColor = '#10b981' // emerald - available
+  } else if (online) {
+    bgColor = '#f59e0b' // amber - occupied
+  }
+
+  const label = maxPower >= 50 ? `${maxPower}kW` : `${maxPower}`
+
+  return L.divIcon({
+    className: '',
+    html: `
+      <div style="
+        background:${bgColor};
+        color:#fff;
+        padding:4px 8px;
+        border-radius:20px;
+        font-size:11px;
+        font-weight:700;
+        white-space:nowrap;
+        box-shadow:0 2px 8px rgba(0,0,0,0.3);
+        border:2px solid white;
+        display:flex;
+        align-items:center;
+        gap:3px;
+        cursor:pointer;
+        transform:translate(-50%,-50%);
+      ">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+        </svg>
+        ${label}
+      </div>
+    `,
+    iconSize: [0, 0],
+    iconAnchor: [0, 0],
+  })
 }
 
-function RecenterMap({ lat, lon }: { lat: number; lon: number }) {
+function FitBounds({ stations, userLat, userLon }: { stations: ChargePoint[]; userLat?: number; userLon?: number }) {
   const map = useMap()
-  useEffect(() => { map.setView([lat, lon], 14) }, [map, lat, lon])
+
+  useEffect(() => {
+    const points: [number, number][] = []
+    if (userLat && userLon) points.push([userLat, userLon])
+    stations.forEach(s => {
+      const lat = stationLat(s)
+      const lon = stationLon(s)
+      if (lat && lon) points.push([lat, lon])
+    })
+    if (points.length > 1) {
+      map.fitBounds(L.latLngBounds(points), { padding: [40, 40], maxZoom: 15 })
+    } else if (points.length === 1) {
+      map.setView(points[0], 14)
+    }
+  }, [map, stations, userLat, userLon])
+
   return null
 }
 
@@ -55,18 +85,29 @@ interface StationMapProps {
   userLat?: number
   userLon?: number
   onStationClick?: (station: ChargePoint) => void
+  className?: string
 }
 
-export function StationMap({ stations, userLat, userLon, onStationClick }: StationMapProps) {
+export function StationMap({ stations, userLat, userLon, onStationClick, className }: StationMapProps) {
   const center: [number, number] = userLat && userLon ? [userLat, userLon] : [-23.55, -46.63]
 
+  const validStations = useMemo(
+    () => stations.filter(s => stationLat(s) !== 0 && stationLon(s) !== 0),
+    [stations]
+  )
+
   return (
-    <MapContainer center={center} zoom={14} className="w-full h-full rounded-2xl" zoomControl={false}>
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      {userLat && userLon && <RecenterMap lat={userLat} lon={userLon} />}
+    <MapContainer
+      center={center}
+      zoom={13}
+      className={className || 'w-full h-full'}
+      zoomControl={false}
+      attributionControl={false}
+    >
+      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      <FitBounds stations={validStations} userLat={userLat} userLon={userLon} />
+
+      {/* User location marker */}
       {userLat && userLon && (
         <Marker position={[userLat, userLon]} icon={L.divIcon({
           className: '',
@@ -77,19 +118,33 @@ export function StationMap({ stations, userLat, userLon, onStationClick }: Stati
           <Popup>Voce esta aqui</Popup>
         </Marker>
       )}
-      {stations.map((station) => (
+
+      {/* Station markers - Google Flights style */}
+      {validStations.map((station) => (
         <Marker
           key={station.id}
-          position={[station.latitude, station.longitude]}
-          icon={getStationIcon(station)}
+          position={[stationLat(station), stationLon(station)]}
+          icon={createStationIcon(station)}
           eventHandlers={{ click: () => onStationClick?.(station) }}
         >
           <Popup>
-            <div className="text-sm">
-              <p className="font-bold">{station.name}</p>
-              <p className="text-gray-500">{station.address}</p>
-              <p className="text-emerald-600 font-medium">{formatCurrency(station.pricePerKwh)}/kWh</p>
-              {station.distance != null && <p className="text-gray-400">{formatDistance(station.distance)}</p>}
+            <div className="text-sm min-w-[180px]">
+              <p className="font-bold text-gray-900">{stationName(station)}</p>
+              <p className="text-gray-500 text-xs mt-0.5">{stationAddress(station)}</p>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-emerald-600 font-semibold">{stationMaxPower(station)} kW</span>
+                <span className="text-gray-400">|</span>
+                <span className="text-gray-500">{station.vendor}</span>
+              </div>
+              <div className="flex gap-1 mt-2 flex-wrap">
+                {station.connectors?.map(c => (
+                  <span key={c.id} className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                    c.status === 'Available' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'
+                  }`}>
+                    {c.type}
+                  </span>
+                ))}
+              </div>
             </div>
           </Popup>
         </Marker>
