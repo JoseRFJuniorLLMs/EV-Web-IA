@@ -1,9 +1,10 @@
 import axios from 'axios'
 
 const API_URL = import.meta.env.VITE_API_URL || ''
+const API_PREFIX = import.meta.env.VITE_API_PREFIX || '/ev-api/v1'
 
 const api = axios.create({
-  baseURL: `${API_URL}/api/v1`,
+  baseURL: `${API_URL}${API_PREFIX}`,
   timeout: 15000,
   headers: { 'Content-Type': 'application/json' },
 })
@@ -25,7 +26,7 @@ api.interceptors.response.use(
       const refreshToken = localStorage.getItem('ev_refresh_token')
       if (refreshToken) {
         try {
-          const { data } = await axios.post(`${API_URL}/api/v1/auth/refresh`, {
+          const { data } = await axios.post(`${API_URL}${API_PREFIX}/auth/refresh`, {
             refreshToken,
           })
           localStorage.setItem('ev_access_token', data.accessToken)

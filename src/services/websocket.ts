@@ -14,7 +14,7 @@ export class EVWebSocket {
 
   constructor(path: string) {
     const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const wsBase = import.meta.env.VITE_WS_URL || `${proto}//${window.location.host}`
+    const wsBase = import.meta.env.VITE_WS_URL || `${proto}//${window.location.host}/ev-ws`
     this.url = `${wsBase}${path}`
   }
 
