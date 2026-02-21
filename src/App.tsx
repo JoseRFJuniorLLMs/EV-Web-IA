@@ -33,7 +33,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter basename="/ev-web-ia">
+      <BrowserRouter basename="/EV-Web-IA">
         <Suspense fallback={<FullPageLoader />}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />

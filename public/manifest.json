@@ -2,7 +2,7 @@
   "name": "EV-Web - Carregamento Inteligente",
   "short_name": "EV-Web",
   "description": "Carregue seu veiculo eletrico por voz com a EVA",
-  "start_url": "/ev-web-ia/",
+  "start_url": "/EV-Web-IA/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#10b981",

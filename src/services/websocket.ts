@@ -13,7 +13,7 @@ export class EVWebSocket {
   private intentionalClose = false
 
   constructor(path: string) {
-    const wsBase = import.meta.env.VITE_WS_URL || `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}`
+    const wsBase = import.meta.env.VITE_WS_URL || 'ws://34.35.36.178:8082'
     this.url = `${wsBase}${path}`
   }
 
