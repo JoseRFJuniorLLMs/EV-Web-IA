@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://34.35.36.178:8082'
+const API_URL = import.meta.env.VITE_API_URL || ''
 
 const api = axios.create({
   baseURL: `${API_URL}/api/v1`,
@@ -35,7 +35,7 @@ api.interceptors.response.use(
         } catch {
           localStorage.removeItem('ev_access_token')
           localStorage.removeItem('ev_refresh_token')
-          window.location.href = '/login'
+          window.location.href = '/ev-web-ia/login'
         }
       }
     }

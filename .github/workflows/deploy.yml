@@ -1,52 +1,28 @@
-name: Deploy to GitHub Pages
+name: Deploy EV-Web to VM
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
-
 jobs:
-  build:
-    name: Build
-    runs-on: ubuntu-latest
+  deploy:
+    name: Build & Deploy
+    runs-on: self-hosted
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
+      - name: Build Docker image
+        run: docker build -t ev-web:latest .
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Stop old container
+        run: docker rm -f ev-web 2>/dev/null || true
 
-      - name: Build
-        run: npm run build
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-
-  deploy:
-    name: Deploy
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Run new container
+        run: |
+          docker run -d \
+            --name ev-web \
+            --network host \
+            --restart unless-stopped \
+            ev-web:latest
