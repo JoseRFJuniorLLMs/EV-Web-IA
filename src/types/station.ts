@@ -28,7 +28,7 @@ export interface ChargePoint {
   location_id: string
   location?: Location
   connectors: Connector[]
-  last_seen: string
+  last_heartbeat: string
   created_at: string
   updated_at: string
 }
