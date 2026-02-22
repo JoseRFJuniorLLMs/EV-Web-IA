@@ -1,9 +1,13 @@
-import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet'
-import { useEffect, useMemo } from 'react'
+import { MapContainer, TileLayer, Marker, Polyline, useMap, ZoomControl } from 'react-leaflet'
+import { useEffect, useMemo, useRef, useCallback } from 'react'
 import type { ChargePoint } from '../../types/station'
 import { stationName, stationMaxPower, stationIsOnline, stationLat, stationLon } from '../../types/station'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
+
+// Portugal center (between Porto and Faro)
+const PORTUGAL_CENTER: [number, number] = [39.5, -8.0]
+const PORTUGAL_ZOOM = 7
 
 // Haversine distance in km
 function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -117,9 +121,9 @@ function createStationCardIcon(group: LocationGroup) {
         min-width:180px;
         max-width:220px;
         cursor:pointer;
-        transform:translate(-50%,-100%);
         border-left:4px solid ${statusDot};
         font-family:system-ui,-apple-system,sans-serif;
+        position:relative;
       ">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
           <div style="width:8px;height:8px;border-radius:50%;background:${statusDot};flex-shrink:0;"></div>
@@ -153,8 +157,8 @@ function createStationCardIcon(group: LocationGroup) {
         "></div>
       </div>
     `,
-    iconSize: [0, 0],
-    iconAnchor: [0, 0],
+    iconSize: [200, 90],
+    iconAnchor: [100, 98],
   })
 }
 
@@ -179,13 +183,26 @@ function createDistanceIcon(distKm: number) {
         ${label}
       </div>
     `,
-    iconSize: [0, 0],
-    iconAnchor: [0, 0],
+    iconSize: [60, 24],
+    iconAnchor: [30, 12],
   })
 }
 
+// Invalidate map size after mount (fixes Leaflet + lazy loading)
+function MapInvalidator() {
+  const map = useMap()
+  useEffect(() => {
+    // Small delay to ensure container has final dimensions
+    const timer = setTimeout(() => map.invalidateSize(), 200)
+    return () => clearTimeout(timer)
+  }, [map])
+  return null
+}
+
+// Fit bounds ONCE when stations first load (not on every change)
 function FitBounds({ groups, userLat, userLon }: { groups: LocationGroup[]; userLat?: number; userLon?: number }) {
   const map = useMap()
+  const hasFittedRef = useRef(false)
 
   useEffect(() => {
     const points: [number, number][] = []
@@ -193,14 +210,60 @@ function FitBounds({ groups, userLat, userLon }: { groups: LocationGroup[]; user
     groups.forEach(g => {
       if (g.lat && g.lon) points.push([g.lat, g.lon])
     })
-    if (points.length > 1) {
+    if (points.length > 1 && !hasFittedRef.current) {
       map.fitBounds(L.latLngBounds(points), { padding: [60, 60], maxZoom: 14 })
-    } else if (points.length === 1) {
+      hasFittedRef.current = true
+    } else if (points.length === 1 && !hasFittedRef.current) {
       map.setView(points[0], 13)
+      hasFittedRef.current = true
     }
   }, [map, groups, userLat, userLon])
 
   return null
+}
+
+// Locate user button component
+function LocateButton({ userLat, userLon }: { userLat?: number; userLon?: number }) {
+  const map = useMap()
+
+  const handleLocate = useCallback(() => {
+    if (userLat && userLon) {
+      map.setView([userLat, userLon], 14, { animate: true })
+    }
+  }, [map, userLat, userLon])
+
+  if (!userLat || !userLon) return null
+
+  return (
+    <div className="leaflet-bottom leaflet-left" style={{ marginBottom: 20, marginLeft: 10 }}>
+      <div className="leaflet-control">
+        <button
+          onClick={handleLocate}
+          style={{
+            width: 40,
+            height: 40,
+            background: 'white',
+            border: '2px solid rgba(0,0,0,0.2)',
+            borderRadius: 8,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+          }}
+          title="Minha localizacao"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="4" />
+            <line x1="12" y1="2" x2="12" y2="6" />
+            <line x1="12" y1="18" x2="12" y2="22" />
+            <line x1="2" y1="12" x2="6" y2="12" />
+            <line x1="18" y1="12" x2="22" y2="12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  )
 }
 
 interface StationMapProps {
@@ -212,7 +275,8 @@ interface StationMapProps {
 }
 
 export function StationMap({ stations, userLat, userLon, onStationClick, className }: StationMapProps) {
-  const center: [number, number] = userLat && userLon ? [userLat, userLon] : [-23.55, -46.63]
+  const center: [number, number] = userLat && userLon ? [userLat, userLon] : PORTUGAL_CENTER
+  const zoom = userLat && userLon ? 13 : PORTUGAL_ZOOM
 
   const validStations = useMemo(
     () => stations.filter(s => stationLat(s) !== 0 && stationLon(s) !== 0),
@@ -225,7 +289,6 @@ export function StationMap({ stations, userLat, userLon, onStationClick, classNa
   // Build route path through locations
   const routeGroups = useMemo(() => {
     if (groups.length <= 1) return groups
-    // Build route using charge points, then map back to groups
     const routeStations = buildRoute(groups.map(g => g.chargePoints[0]))
     return routeStations.map(s => {
       const locId = s.location_id || s.id
@@ -255,16 +318,46 @@ export function StationMap({ stations, userLat, userLon, onStationClick, classNa
     return segs
   }, [routeGroups])
 
+  // ===== MEMOIZE ALL ICONS to prevent react-leaflet re-creating DOM on each render =====
+  const stationIcons = useMemo(
+    () => new Map(routeGroups.map(g => [g.locationId, createStationCardIcon(g)])),
+    [routeGroups]
+  )
+
+  const distanceIcons = useMemo(
+    () => distanceSegments.map(seg => createDistanceIcon(seg.dist)),
+    [distanceSegments]
+  )
+
+  const userLocationIcon = useMemo(
+    () => L.divIcon({
+      className: '',
+      html: `<div style="
+        background:#3b82f6;
+        width:18px;height:18px;
+        border-radius:50%;
+        border:3px solid white;
+        box-shadow:0 0 0 3px rgba(59,130,246,0.3), 0 2px 8px rgba(0,0,0,0.3);
+      "></div>`,
+      iconSize: [18, 18],
+      iconAnchor: [9, 9],
+    }),
+    [/* static — never changes */]
+  )
+
   return (
     <MapContainer
       center={center}
-      zoom={13}
+      zoom={zoom}
       className={className || 'w-full h-full'}
       zoomControl={false}
       attributionControl={false}
     >
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      <ZoomControl position="bottomright" />
+      <MapInvalidator />
       <FitBounds groups={routeGroups} userLat={userLat} userLon={userLon} />
+      <LocateButton userLat={userLat} userLon={userLon} />
 
       {/* Green route polyline */}
       {routeCoords.length > 1 && (
@@ -298,25 +391,14 @@ export function StationMap({ stations, userLat, userLon, onStationClick, classNa
         <Marker
           key={`dist-${i}`}
           position={[seg.lat, seg.lon]}
-          icon={createDistanceIcon(seg.dist)}
+          icon={distanceIcons[i]}
           interactive={false}
         />
       ))}
 
       {/* User location marker */}
       {userLat && userLon && (
-        <Marker position={[userLat, userLon]} icon={L.divIcon({
-          className: '',
-          html: `<div style="
-            background:#3b82f6;
-            width:18px;height:18px;
-            border-radius:50%;
-            border:3px solid white;
-            box-shadow:0 0 0 3px rgba(59,130,246,0.3), 0 2px 8px rgba(0,0,0,0.3);
-          "></div>`,
-          iconSize: [18, 18],
-          iconAnchor: [9, 9],
-        })} />
+        <Marker position={[userLat, userLon]} icon={userLocationIcon} />
       )}
 
       {/* Via Verde style station cards */}
@@ -324,7 +406,7 @@ export function StationMap({ stations, userLat, userLon, onStationClick, classNa
         <Marker
           key={group.locationId}
           position={[group.lat, group.lon]}
-          icon={createStationCardIcon(group)}
+          icon={stationIcons.get(group.locationId)!}
           eventHandlers={{
             click: () => onStationClick?.(group.chargePoints[0]),
           }}

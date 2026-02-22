@@ -8,9 +8,9 @@ interface ChargingStatsProps {
 
 export function ChargingStats({ session }: ChargingStatsProps) {
   const stats = [
-    { icon: <Battery className="w-4 h-4" />, label: 'Energia', value: formatKwh(session.energyKwh), color: 'text-emerald-600' },
-    { icon: <Zap className="w-4 h-4" />, label: 'Potencia', value: formatPower(session.powerKw), color: 'text-amber-600' },
-    { icon: <Clock className="w-4 h-4" />, label: 'Tempo', value: formatDuration(session.elapsedMinutes), color: 'text-blue-600' },
+    { icon: <Battery className="w-4 h-4" />, label: 'Energia', value: formatKwh(session.energy_kwh), color: 'text-emerald-600' },
+    { icon: <Zap className="w-4 h-4" />, label: 'Potencia', value: formatPower(session.power_kw), color: 'text-amber-600' },
+    { icon: <Clock className="w-4 h-4" />, label: 'Tempo', value: formatDuration(session.elapsed_minutes), color: 'text-blue-600' },
     { icon: <DollarSign className="w-4 h-4" />, label: 'Custo', value: formatCurrency(session.cost), color: 'text-purple-600' },
   ]
 
@@ -25,10 +25,10 @@ export function ChargingStats({ session }: ChargingStatsProps) {
           <p className="font-bold text-gray-900 mt-1">{stat.value}</p>
         </div>
       ))}
-      {session.estimatedMinutesLeft > 0 && (
+      {session.estimated_minutes_left > 0 && (
         <div className="col-span-2 bg-emerald-50 rounded-xl p-3 text-center">
           <span className="text-sm text-emerald-700">
-            Estimativa: {formatDuration(session.estimatedMinutesLeft)} restantes
+            Estimativa: {formatDuration(session.estimated_minutes_left)} restantes
           </span>
         </div>
       )}

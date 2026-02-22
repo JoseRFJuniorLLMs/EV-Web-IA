@@ -34,8 +34,38 @@
   50% { transform: scale(1.05); opacity: 0.9; }
 }
 
+/* ===== Leaflet protection from Tailwind v4 preflight ===== */
+/* Tailwind resets border-width, box-sizing, img max-width etc.
+   which breaks Leaflet tiles, markers and controls. */
 .leaflet-container {
   width: 100%;
   height: 100%;
-  border-radius: 1rem;
+}
+.leaflet-container *,
+.leaflet-container *::before,
+.leaflet-container *::after {
+  box-sizing: content-box;
+}
+.leaflet-container img {
+  max-width: none !important;
+  max-height: none !important;
+}
+.leaflet-tile-pane img {
+  image-rendering: auto;
+}
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+  pointer-events: auto !important;
+}
+/* Prevent Tailwind border reset from hiding the pointer triangle */
+.leaflet-marker-icon div {
+  border-style: solid;
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
 }

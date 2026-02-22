@@ -11,7 +11,7 @@ export function ChargingPage() {
 
   const handleStop = async () => {
     if (!session) return
-    await stopCharging.mutateAsync(session.transactionId)
+    await stopCharging.mutateAsync(session.transaction_id)
   }
 
   if (isLoading) return <LoadingSpinner className="min-h-screen" />

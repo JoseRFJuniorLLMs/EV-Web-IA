@@ -9,9 +9,12 @@ export function useWallet() {
       try {
         const { data } = await api.get('/wallet')
         return data
-      } catch {
-        // Wallet endpoint not implemented yet - return default
-        return { balance: 0, currency: 'BRL' }
+      } catch (err: any) {
+        // Only swallow 404 (not implemented) - rethrow real errors
+        if (err?.response?.status === 404 || err?.response?.status === 501) {
+          return { balance: 0, currency: 'BRL' }
+        }
+        throw err
       }
     },
   })

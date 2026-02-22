@@ -147,6 +147,7 @@ export function HomePage() {
         <EvaSessionOverlay
           status={eva.status}
           messages={eva.messages}
+          subtitleText={eva.subtitleText}
           isSpeaking={eva.isSpeaking}
           waveCanvasRef={eva.waveCanvasRef}
           error={eva.error}

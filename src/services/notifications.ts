@@ -9,8 +9,8 @@ export function showNotification(title: string, body: string, icon?: string): vo
   if (Notification.permission !== 'granted') return
   new Notification(title, {
     body,
-    icon: icon || '/ev-icon.svg',
-    badge: '/ev-icon.svg',
+    icon: icon || (import.meta.env.BASE_URL + 'ev-icon.svg'),
+    badge: import.meta.env.BASE_URL + 'ev-icon.svg',
     tag: 'ev-web',
   })
 }

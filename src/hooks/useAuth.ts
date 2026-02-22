@@ -5,15 +5,18 @@ import type { User, AuthTokens } from '../types/user'
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [token, setToken] = useState(() => localStorage.getItem('ev_access_token') || '')
 
   const saveTokens = useCallback((tokens: AuthTokens) => {
     localStorage.setItem('ev_access_token', tokens.accessToken)
     localStorage.setItem('ev_refresh_token', tokens.refreshToken)
+    setToken(tokens.accessToken)
   }, [])
 
   const clearTokens = useCallback(() => {
     localStorage.removeItem('ev_access_token')
     localStorage.removeItem('ev_refresh_token')
+    setToken('')
   }, [])
 
   const fetchUser = useCallback(async () => {
@@ -29,8 +32,8 @@ export function useAuth() {
   }, [clearTokens])
 
   useEffect(() => {
-    const token = localStorage.getItem('ev_access_token')
-    if (token) {
+    const stored = localStorage.getItem('ev_access_token')
+    if (stored) {
       fetchUser()
     } else {
       setLoading(false)
@@ -63,6 +66,6 @@ export function useAuth() {
     login,
     register,
     logout,
-    token: localStorage.getItem('ev_access_token') || '',
+    token,
   }
 }

@@ -36,7 +36,8 @@ api.interceptors.response.use(
         } catch {
           localStorage.removeItem('ev_access_token')
           localStorage.removeItem('ev_refresh_token')
-          window.location.href = '/ev-web-ia/login'
+          // Use replace to avoid adding to browser history stack
+          window.location.replace(import.meta.env.BASE_URL + 'login')
         }
       }
     }

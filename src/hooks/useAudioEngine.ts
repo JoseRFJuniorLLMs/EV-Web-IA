@@ -94,7 +94,7 @@ export function useAudioEngine() {
     animFrameRef.current = requestAnimationFrame(drawWaveform)
 
     if (!inputCtx.audioWorklet) throw new Error('AudioWorklet not supported')
-    await inputCtx.audioWorklet.addModule('/audio-processor.js')
+    await inputCtx.audioWorklet.addModule(import.meta.env.BASE_URL + 'audio-processor.js')
     await inputCtx.resume()
     await outputCtx.resume()
 
@@ -158,6 +158,10 @@ export function useAudioEngine() {
     if (workletNodeRef.current) { workletNodeRef.current.disconnect(); workletNodeRef.current.port.postMessage('STOP'); workletNodeRef.current = null }
     sourcesRef.current.forEach(s => { try { s.stop() } catch { /* */ } })
     sourcesRef.current.clear()
+    // Close AudioContexts to prevent memory leak (browser limits ~6 instances)
+    if (inputAudioCtxRef.current) { inputAudioCtxRef.current.close().catch(() => {}); inputAudioCtxRef.current = null }
+    if (outputAudioCtxRef.current) { outputAudioCtxRef.current.close().catch(() => {}); outputAudioCtxRef.current = null }
+    outputNodeRef.current = null
     setIsSpeaking(false)
   }, [])
 

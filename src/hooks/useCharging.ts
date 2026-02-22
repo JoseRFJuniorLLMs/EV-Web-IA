@@ -9,11 +9,19 @@ export function useActiveSession() {
       try {
         const { data } = await api.get('/transactions/active')
         return data
-      } catch {
-        return null
+      } catch (err: unknown) {
+        // 404 = no active session (normal state) — return null silently
+        const status = (err as { response?: { status?: number } })?.response?.status
+        if (status === 404) return null
+        // Other errors: rethrow so React Query can handle retries
+        throw err
       }
     },
-    refetchInterval: 5000,
+    // Only poll every 5s when there IS an active session; otherwise stop polling
+    refetchInterval: (query) => (query.state.data ? 5000 : false),
+    retry: 1,
+    retryDelay: 10000,
+    staleTime: 4000,
   })
 }
 

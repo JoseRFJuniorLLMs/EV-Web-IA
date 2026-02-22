@@ -8,15 +8,15 @@ interface ChargingMonitorProps {
 }
 
 export function ChargingMonitor({ session, onStop }: ChargingMonitorProps) {
-  const progress = session.targetSoc > 0 ? (session.soc / session.targetSoc) * 100 : session.soc
+  const progress = session.target_soc > 0 ? (session.soc / session.target_soc) * 100 : session.soc
   const circumference = 2 * Math.PI * 54
   const strokeDash = circumference - (progress / 100) * circumference
 
   return (
     <div className="card">
       <div className="text-center mb-4">
-        <h3 className="font-bold text-gray-900">{session.chargePointName}</h3>
-        <span className="text-xs text-gray-500">{session.connectorType}</span>
+        <h3 className="font-bold text-gray-900">{session.charge_point_name}</h3>
+        <span className="text-xs text-gray-500">{session.connector_type}</span>
       </div>
 
       {/* Circular progress */}
@@ -33,7 +33,7 @@ export function ChargingMonitor({ session, onStop }: ChargingMonitorProps) {
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-3xl font-bold text-gray-900">{Math.round(session.soc)}%</span>
-          <span className="text-xs text-gray-500">de {session.targetSoc}%</span>
+          <span className="text-xs text-gray-500">de {session.target_soc}%</span>
         </div>
       </div>
 
@@ -51,7 +51,7 @@ export function ChargingMonitor({ session, onStop }: ChargingMonitorProps) {
       {session.status === 'Completed' && (
         <div className="mt-4 text-center py-3 bg-emerald-50 rounded-xl">
           <p className="text-emerald-700 font-semibold">Carregamento concluido!</p>
-          <p className="text-sm text-emerald-600 mt-1">Total: {formatCurrency(session.cost)} | {formatKwh(session.energyKwh)}</p>
+          <p className="text-sm text-emerald-600 mt-1">Total: {formatCurrency(session.cost)} | {formatKwh(session.energy_kwh)}</p>
         </div>
       )}
     </div>

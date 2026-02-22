@@ -11,6 +11,7 @@ export class EVWebSocket {
   private reconnectAttempt = 0
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null
   private intentionalClose = false
+  private token: string = ''
 
   constructor(path: string) {
     const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
@@ -20,10 +21,13 @@ export class EVWebSocket {
 
   connect(token: string): void {
     this.intentionalClose = false
-    this.ws = new WebSocket(`${this.url}?token=${token}`)
+    this.token = token
+    this.ws = new WebSocket(this.url)
 
     this.ws.onopen = () => {
       this.reconnectAttempt = 0
+      // Authenticate via first message instead of URL query param (security)
+      this.ws?.send(JSON.stringify({ type: 'config', data: this.token }))
     }
 
     this.ws.onmessage = (event) => {
@@ -35,7 +39,7 @@ export class EVWebSocket {
 
     this.ws.onclose = () => {
       if (!this.intentionalClose) {
-        this.attemptReconnect(token)
+        this.attemptReconnect()
       }
     }
 
@@ -44,11 +48,11 @@ export class EVWebSocket {
     }
   }
 
-  private attemptReconnect(token: string): void {
+  private attemptReconnect(): void {
     if (this.reconnectAttempt >= RECONNECT_DELAYS.length) return
     const delay = RECONNECT_DELAYS[this.reconnectAttempt]
     this.reconnectAttempt++
-    this.reconnectTimer = setTimeout(() => this.connect(token), delay)
+    this.reconnectTimer = setTimeout(() => this.connect(this.token), delay)
   }
 
   send(msg: VoiceMessage): void {
@@ -78,6 +82,7 @@ export class EVWebSocket {
     this.ws?.close()
     this.ws = null
     this.handlers = []
+    this.token = ''
   }
 
   get connected(): boolean {

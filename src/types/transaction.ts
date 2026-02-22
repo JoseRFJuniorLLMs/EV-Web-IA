@@ -20,15 +20,15 @@ export interface MeterValue {
 }
 
 export interface ChargingSession {
-  transactionId: string
-  chargePointName: string
-  connectorType: string
+  transaction_id: string
+  charge_point_name: string
+  connector_type: string
   status: 'Started' | 'Completed'
   soc: number
-  targetSoc: number
-  energyKwh: number
-  powerKw: number
+  target_soc: number
+  energy_kwh: number
+  power_kw: number
   cost: number
-  elapsedMinutes: number
-  estimatedMinutesLeft: number
+  elapsed_minutes: number
+  estimated_minutes_left: number
 }

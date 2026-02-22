@@ -45,7 +45,7 @@ export function StationPage() {
         <div className="card">
           <div className="flex items-start gap-1 text-gray-500 text-sm">
             <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-            <span>{stationAddress(station)}</span>
+            <span>{stationAddress(station) || 'Endereco nao disponivel'}</span>
           </div>
           <div className="flex items-center gap-4 mt-3">
             <div className="flex items-center gap-1 text-emerald-600">

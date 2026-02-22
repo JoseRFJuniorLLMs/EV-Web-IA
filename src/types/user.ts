@@ -9,16 +9,6 @@ export interface User {
   updated_at?: string
 }
 
-export interface Vehicle {
-  id: string
-  brand: string
-  model: string
-  year: number
-  batteryCapacityKwh: number
-  connectorType: string
-  licensePlate: string
-}
-
 export interface Wallet {
   balance: number
   currency: string
