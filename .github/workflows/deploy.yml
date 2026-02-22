@@ -30,7 +30,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_API_URL: https://${{ secrets.VM_IP }}/ev-api
+          VITE_API_URL: ""
           VITE_WS_URL: wss://${{ secrets.VM_IP }}/ev-ws
           VITE_STRIPE_PUBLIC_KEY: ${{ secrets.STRIPE_PUBLIC_KEY }}
 
