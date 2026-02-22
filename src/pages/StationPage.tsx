@@ -21,9 +21,8 @@ export function StationPage() {
     if (selectedConnector == null) return
     try {
       await startCharging.mutateAsync({
-        chargePointId: station.id,
-        connectorId: selectedConnector,
-        targetSoc: 80,
+        device_id: station.id,
+        connector_id: selectedConnector,
       })
       navigate('/charging')
     } catch {
@@ -64,8 +63,8 @@ export function StationPage() {
               <ConnectorCard
                 key={c.id}
                 connector={c}
-                selected={selectedConnector === c.id}
-                onClick={() => setSelectedConnector(c.id)}
+                selected={selectedConnector === c.connector_id}
+                onClick={() => setSelectedConnector(c.connector_id)}
               />
             ))}
           </div>

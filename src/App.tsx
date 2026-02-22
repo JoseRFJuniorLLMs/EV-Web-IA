@@ -12,6 +12,7 @@ const ChargingPage = lazy(() => import('./pages/ChargingPage').then(m => ({ defa
 const WalletPage = lazy(() => import('./pages/WalletPage').then(m => ({ default: m.WalletPage })))
 const HistoryPage = lazy(() => import('./pages/HistoryPage').then(m => ({ default: m.HistoryPage })))
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage })))
+const RegisterPage = lazy(() => import('./pages/RegisterPage').then(m => ({ default: m.RegisterPage })))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,6 +38,7 @@ export default function App() {
         <Suspense fallback={<FullPageLoader />}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
             <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
             <Route path="/station/:id" element={<ProtectedRoute><StationPage /></ProtectedRoute>} />
             <Route path="/charging" element={<ProtectedRoute><ChargingPage /></ProtectedRoute>} />

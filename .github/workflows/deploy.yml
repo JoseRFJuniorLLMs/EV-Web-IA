@@ -29,6 +29,10 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          VITE_API_URL: https://${{ secrets.VM_IP }}/ev-api
+          VITE_WS_URL: wss://${{ secrets.VM_IP }}/ev-ws
+          VITE_STRIPE_PUBLIC_KEY: ${{ secrets.STRIPE_PUBLIC_KEY }}
 
       - name: Setup SSH key
         run: |
@@ -43,8 +47,8 @@ jobs:
 
       - name: Deploy to VM
         run: |
-          ssh ${{ env.VM_USER }}@${{ env.VM_IP }} "rm -rf /tmp/ev-web-dist"
-          scp -r dist ${{ env.VM_USER }}@${{ env.VM_IP }}:/tmp/ev-web-dist
+          ssh ${{ env.VM_USER }}@${{ env.VM_IP }} "rm -rf /tmp/ev-web-dist && mkdir -p /tmp/ev-web-dist"
+          scp -r dist/* ${{ env.VM_USER }}@${{ env.VM_IP }}:/tmp/ev-web-dist/
 
           ssh ${{ env.VM_USER }}@${{ env.VM_IP }} '
             set -e
@@ -66,3 +70,7 @@ jobs:
             exit 1
           fi
           echo "EV-Web OK (HTTP $HTTP_CODE)"
+
+      - name: Notify
+        if: always()
+        run: echo "EV-Web deploy ${{ job.status }} - commit ${{ github.sha }}"

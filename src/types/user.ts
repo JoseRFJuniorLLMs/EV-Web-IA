@@ -2,12 +2,11 @@ export interface User {
   id: string
   name: string
   email: string
-  cpf?: string
-  phone?: string
+  document?: string
   role: 'user' | 'operator' | 'admin'
-  avatarUrl?: string
-  vehicles: Vehicle[]
-  wallet: Wallet
+  status?: string
+  created_at?: string
+  updated_at?: string
 }
 
 export interface Vehicle {
@@ -28,5 +27,4 @@ export interface Wallet {
 export interface AuthTokens {
   accessToken: string
   refreshToken: string
-  expiresAt: number
 }

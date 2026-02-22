@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, User, Car, Wallet, History, LogOut } from 'lucide-react'
+import { ArrowLeft, User, Wallet, History, LogOut, Zap } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 
 export function ProfilePage() {
@@ -7,9 +7,9 @@ export function ProfilePage() {
   const { user, logout } = useAuth()
 
   const menuItems = [
-    { icon: <Wallet className="w-5 h-5" />, label: 'Carteira', path: '/wallet' },
+    { icon: <Zap className="w-5 h-5" />, label: 'Estacoes', path: '/' },
     { icon: <History className="w-5 h-5" />, label: 'Historico', path: '/history' },
-    { icon: <Car className="w-5 h-5" />, label: 'Meus Veiculos', path: '/vehicles' },
+    { icon: <Wallet className="w-5 h-5" />, label: 'Carteira', path: '/wallet' },
   ]
 
   return (
@@ -32,6 +32,7 @@ export function ProfilePage() {
           <div>
             <p className="font-bold text-gray-900 text-lg">{user?.name || 'Usuario'}</p>
             <p className="text-gray-500 text-sm">{user?.email}</p>
+            {user?.document && <p className="text-gray-400 text-xs mt-0.5">CPF: {user.document.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}</p>}
           </div>
         </div>
 

@@ -20,7 +20,7 @@ export function useActiveSession() {
 export function useStartCharging() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (params: { chargePointId: string; connectorId: number; targetSoc?: number }) => {
+    mutationFn: async (params: { device_id: string; connector_id: number }) => {
       const { data } = await api.post('/transactions/start', params)
       return data as Transaction
     },
@@ -48,8 +48,8 @@ export function useTransactionHistory() {
   return useQuery<Transaction[]>({
     queryKey: ['transactions'],
     queryFn: async () => {
-      const { data } = await api.get('/transactions')
-      return data
+      const { data } = await api.get('/transactions/history')
+      return data ?? []
     },
   })
 }

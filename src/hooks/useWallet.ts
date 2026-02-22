@@ -6,8 +6,13 @@ export function useWallet() {
   return useQuery<Wallet>({
     queryKey: ['wallet'],
     queryFn: async () => {
-      const { data } = await api.get('/wallet')
-      return data
+      try {
+        const { data } = await api.get('/wallet')
+        return data
+      } catch {
+        // Wallet endpoint not implemented yet - return default
+        return { balance: 0, currency: 'BRL' }
+      }
     },
   })
 }

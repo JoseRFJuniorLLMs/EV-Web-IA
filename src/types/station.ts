@@ -1,5 +1,5 @@
 export interface Connector {
-  id: number
+  id: string
   charge_point_id: string
   connector_id: number
   type: string

@@ -51,8 +51,15 @@ export function RegisterPage() {
     try {
       await register(name, email, password, cleanCPF)
       navigate('/')
-    } catch {
-      setError('Erro ao criar conta. Tente novamente.')
+    } catch (err: any) {
+      const msg = err?.response?.data?.error
+      if (msg === 'email already registered') {
+        setError('Este email ja esta cadastrado.')
+      } else if (msg === 'cpf already registered') {
+        setError('Este CPF ja esta cadastrado.')
+      } else {
+        setError(msg || 'Erro ao criar conta. Tente novamente.')
+      }
     } finally {
       setLoading(false)
     }

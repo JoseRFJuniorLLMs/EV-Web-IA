@@ -39,7 +39,7 @@ export function ChargingMonitor({ session, onStop }: ChargingMonitorProps) {
 
       <ChargingStats session={session} />
 
-      {session.status === 'Active' && onStop && (
+      {session.status === 'Started' && onStop && (
         <button
           onClick={onStop}
           className="w-full mt-4 py-3 bg-red-500 text-white font-semibold rounded-xl hover:bg-red-600 transition-colors"
