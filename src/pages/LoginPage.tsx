@@ -20,6 +20,8 @@ export function LoginPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
 
+  const isVisitor = cpf.replace(/\D/g, '') === '00000000000'
+
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCpf(formatCPF(e.target.value))
   }
@@ -36,7 +38,8 @@ export function LoginPage() {
 
     setLoading(true)
     try {
-      await login(cleanCPF, password)
+      const pwd = cleanCPF === '00000000000' ? 'visitante' : password
+      await login(cleanCPF, pwd)
       navigate('/')
     } catch {
       setError('CPF ou senha invalidos. Tente novamente.')
@@ -68,14 +71,16 @@ export function LoginPage() {
             required
           />
 
-          <input
-            type="password"
-            placeholder="Senha"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            required
-          />
+          {!isVisitor && (
+            <input
+              type="password"
+              placeholder="Senha"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              required
+            />
+          )}
 
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
@@ -84,7 +89,13 @@ export function LoginPage() {
           </Button>
         </form>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-center text-xs text-gray-400 mt-4">
+          Sem CPF cadastrado? Digite{' '}
+          <span className="font-mono font-medium text-gray-500">000.000.000-00</span>
+          {' '}para entrar como visitante.
+        </p>
+
+        <p className="text-center text-sm text-gray-500 mt-4">
           Nao tem conta?{' '}
           <Link to="/register" className="text-emerald-600 font-medium hover:underline">Criar conta</Link>
         </p>
